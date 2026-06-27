@@ -20,47 +20,25 @@ from app.services.threat_scoring import ThreatScoring
 class Coordinator:
 
     @staticmethod
-    async def execute(
-        db: AsyncSession
-    ):
+    async def execute(db: AsyncSession) -> dict:
 
-        # --------------------------
-        # Generate Attack
-        # --------------------------
-
+        # 1. Generate attack data
         attack = AttackGenerator.generate_attack()
 
-        # --------------------------
-        # Threat Score
-        # --------------------------
+        # 2. Calculate threat score
+        score = ThreatScoring.calculate_score(attack["attack_type"])
 
-        score = ThreatScoring.calculate_score(
-            attack["attack_type"]
-        )
-
-        # --------------------------
-        # Save Alert
-        # --------------------------
-
+        # 3. Save alert
         alert = Alert(
             attack_type=attack["attack_type"],
             severity=attack["severity"],
             source_ip=attack["source_ip"],
             status="NEW"
         )
+        alert = await AlertRepository.create(db, alert)
 
-        alert = await AlertRepository.create(
-            db,
-            alert
-        )
-
-        # --------------------------
-        # Analysis
-        # --------------------------
-
-        generated_analysis = AnalysisGenerator.generate(
-            attack
-        )
+        # 4. Generate and save analysis
+        generated_analysis = AnalysisGenerator.generate(attack)
 
         analysis = Analysis(
             alert_id=alert.id,
@@ -68,65 +46,55 @@ class Coordinator:
             confidence=generated_analysis["confidence"],
             summary=generated_analysis["summary"]
         )
+        analysis = await AnalysisRepository.create(db, analysis)
 
-        analysis = await AnalysisRepository.create(
-            db,
-            analysis
-        )
-
-        # --------------------------
-        # Response
-        # --------------------------
-
-        response = ResponseGenerator.generate(
-            score
-        )
+        # 5. Determine and execute response
+        response = ResponseGenerator.generate(score)
 
         blocked = None
-
         if response["action"] == "Block IP":
-
-            existing = await BlockedRepository.get_by_ip(
-                db,
-                attack["source_ip"]
-            )
+            existing = await BlockedRepository.get_by_ip(db, attack["source_ip"])
 
             if not existing:
-
                 blocked = BlockedIP(
                     ip=attack["source_ip"],
                     reason=analysis.summary
                 )
-
-                blocked = await BlockedRepository.create(
-                    db,
-                    blocked
-                )
-
+                blocked = await BlockedRepository.create(db, blocked)
             else:
                 blocked = existing
 
-        # --------------------------
-        # Update Agent Heartbeat
-        # --------------------------
-
+        # 6. Update agent heartbeats
         agents = await AgentRepository.get_all(db)
-
+        now = datetime.utcnow()
         for agent in agents:
-
-            agent.heartbeat = datetime.utcnow()
+            agent.heartbeat = now
+            agent.status = "ONLINE"
 
         await db.commit()
 
         return {
-
-            "alert": alert,
-
-            "analysis": analysis,
-
-            "score": score,
-
+            "alert": {
+                "id": alert.id,
+                "attack_type": alert.attack_type,
+                "severity": alert.severity,
+                "source_ip": alert.source_ip,
+                "status": alert.status,
+                "created_at": alert.created_at.isoformat()
+            },
+            "analysis": {
+                "id": analysis.id,
+                "alert_id": analysis.alert_id,
+                "prediction": analysis.prediction,
+                "confidence": analysis.confidence,
+                "summary": analysis.summary
+            },
+            "threat_score": score,
             "response": response,
-
-            "blocked_ip": blocked
+            "blocked_ip": {
+                "id": blocked.id,
+                "ip": blocked.ip,
+                "reason": blocked.reason,
+                "blocked_at": blocked.blocked_at.isoformat()
+            } if blocked else None
         }

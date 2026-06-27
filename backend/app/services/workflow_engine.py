@@ -1,18 +1,9 @@
-# app/services/workflow_engine.py
-
 class WorkflowEngine:
 
     @staticmethod
     async def execute(workflow):
-
         """
-        Executes a workflow.
-
-        Future:
-        - Logging
-        - Retry
-        - Metrics
-        - Event Queue
+        Executes a workflow callable.
+        Future: logging, retry, metrics, event queue.
         """
-
         return await workflow()

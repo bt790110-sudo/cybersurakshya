@@ -5,20 +5,10 @@ class AnalysisGenerator:
 
     @staticmethod
     def generate(attack: dict) -> dict:
-        """
-        Generate an AI-style analysis from an attack.
-        """
-
-        score = ThreatScoring.calculate_score(
-            attack["attack_type"]
-        )
+        score = ThreatScoring.calculate_score(attack["attack_type"])
 
         prediction = attack["attack_type"]
-
-        confidence = min(
-            99.0,
-            float(score["score"] + 3)
-        )
+        confidence = min(99.0, float(score["score"] + 3))
 
         summary = (
             f"Detected a possible {prediction} attack "

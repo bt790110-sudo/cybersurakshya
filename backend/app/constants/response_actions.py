@@ -1,5 +1,3 @@
-# app/constants/response_actions.py
-
 RESPONSE_ACTIONS = {
     "LOW": "Monitor",
     "MEDIUM": "Investigate",

@@ -1,5 +1,3 @@
-# app/constants/severity_levels.py
-
 THREAT_SCORES = {
     "PortScan": 60,
     "BruteForce": 75,
