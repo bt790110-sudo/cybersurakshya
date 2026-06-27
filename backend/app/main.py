@@ -20,6 +20,11 @@ from app.api.agents import (
     router as agent_router
 )
 
+from app.api.simulation import (
+    router as simulation_router
+)
+
+
 from app.api.alerts import router as alert_router
 from app.api.analyses import router as analysis_router
 
@@ -36,7 +41,7 @@ app.include_router(blocked_router)
 
 app.include_router(agent_router)
 
-
+app.include_router(simulation_router)
 
 @app.on_event("startup")
 async def startup_event():
