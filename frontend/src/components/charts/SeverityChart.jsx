@@ -1,40 +1,26 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-import { severityData } from "../../constants/dashboardData";
+const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e"];
 
-const COLORS = [
-  "#ef4444", // red
-  "#f97316", // orange
-  "#eab308", // yellow
-  "#22c55e", // green
-];
+export default function SeverityChart({ stats }) {
+  const data = stats?.severity_breakdown
+    ? Object.entries(stats.severity_breakdown).map(([name, value]) => ({ name, value }))
+    : [];
 
-export default function SeverityChart() {
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[250px] text-slate-500 text-sm">
+        No data yet — run a simulation.
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={250}>
       <PieChart>
-        <Pie
-          data={severityData}
-          dataKey="value"
-          nameKey="name"
-          outerRadius={80}
-          label
-        >
-          {severityData.map((entry, index) => (
-            <Cell
-              key={index}
-              fill={COLORS[index]}
-            />
-          ))}
+        <Pie data={data} dataKey="value" nameKey="name" outerRadius={80} label>
+          {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
         </Pie>
-
         <Tooltip />
         <Legend />
       </PieChart>

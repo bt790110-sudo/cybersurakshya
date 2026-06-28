@@ -1,18 +1,16 @@
-import { alertDetail } from "../../constants/alertDetailData";
-
-export default function AlertInfoCard({ alert = alertDetail }) {
+export default function AlertInfoCard({ alert }) {
+  if (!alert) return null;
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
       <h2 className="text-xl font-bold mb-6">Alert Information</h2>
-
       <div className="space-y-4">
-        <Info label="Alert ID" value={alert.id} />
-        <Info label="Attack Type" value={alert.attackType} />
-        <Info label="Severity" value={alert.severity} />
-        <Info label="Status" value={alert.status} />
-        <Info label="Source IP" value={alert.sourceIp} />
-        <Info label="Destination" value={alert.destination} />
-        <Info label="Detected At" value={alert.time} />
+        <Info label="Alert ID"     value={`#${alert.id}`} />
+        <Info label="Attack Type"  value={alert.attackType} />
+        <Info label="Severity"     value={alert.severity} />
+        <Info label="Status"       value={alert.status} />
+        <Info label="Source IP"    value={alert.sourceIp} />
+        <Info label="Destination"  value={alert.destination ?? "Internal Network"} />
+        <Info label="Detected At"  value={alert.time} />
       </div>
     </div>
   );
